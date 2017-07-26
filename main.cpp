@@ -11,24 +11,25 @@ using namespace std;
 #define IMAGE_HEIGHT 240
 #define IMAGE_WIDTH 320
 
+
 int main()
 {
-	// 1. Éî¶ÈÍ¼²¢ÏÔÊ¾
-	Mat i_depth(IMAGE_WIDTH, IMAGE_HEIGHT, CV_16UC1);
+	// 1. æ·±åº¦å›¾å¹¶æ˜¾ç¤º
+	Mat i_depth(IMAGE_HEIGHT, IMAGE_WIDTH, CV_16UC1);
 	i_depth = imread("depth.png", IMREAD_ANYDEPTH);	
-	Mat i_before(IMAGE_WIDTH, IMAGE_HEIGHT, CV_8UC4);				// ÎªÁËÏÔÊ¾·½±ã
-	Mat i_after(IMAGE_WIDTH, IMAGE_HEIGHT, CV_8UC4);				// ÎªÁËÏÔÊ¾·½±ã
-	Mat i_result(IMAGE_WIDTH, IMAGE_HEIGHT, CV_16UC1);				// ÂË²¨½á¹û
+	Mat i_before(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC4);				// ä¸ºäº†æ˜¾ç¤ºæ–¹ä¾¿
+	Mat i_after(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC4);				// ä¸ºäº†æ˜¾ç¤ºæ–¹ä¾¿
+	Mat i_result(IMAGE_HEIGHT, IMAGE_WIDTH, CV_16UC1);				// æ»¤æ³¢ç»“æœ
 	unsigned short maxDepth = 0; 
 	unsigned short* depthArray = (unsigned short*)i_depth.data;
 	unsigned short iZeroCountBefore = 0;
 	unsigned short iZeroCountAfter = 0;
-	for (int i = 0; i < IMAGE_HEIGHT * IMAGE_WIDTH; i++)
+	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 	{
-		int row = i / IMAGE_HEIGHT;
-		int col = i % IMAGE_HEIGHT;
-		unsigned short depthValue = depthArray[row * IMAGE_HEIGHT + col];
-		cout << "ok1" << endl;
+		int row = i / IMAGE_WIDTH;
+		int col = i % IMAGE_WIDTH;
+		
+		unsigned short depthValue = depthArray[row * IMAGE_WIDTH + col];
 		if (depthValue == 0)
 		{
 			i_before.data[i * 4] = 255;
@@ -48,87 +49,87 @@ int main()
 	}
 	cout << "max depth value: " << maxDepth << endl;
 
-	// 2. ÏñËØÂË²¨
+	// 2. åƒç´ æ»¤æ³¢
 	
-	// ÂË²¨ºóÉî¶ÈÍ¼µÄ»º´æ
+	// æ»¤æ³¢åæ·±åº¦å›¾çš„ç¼“å­˜
 	unsigned short* smoothDepthArray = (unsigned short*)i_result.data;
-	// ÎÒÃÇÓÃÕâÁ½¸öÖµÀ´È·¶¨Ë÷ÒıÔÚÕıÈ·µÄ·¶Î§ÄÚ
-	int widthBound = IMAGE_HEIGHT - 1;
-	int heightBound = IMAGE_WIDTH - 1;
+	// æˆ‘ä»¬ç”¨è¿™ä¸¤ä¸ªå€¼æ¥ç¡®å®šç´¢å¼•åœ¨æ­£ç¡®çš„èŒƒå›´å†…
+	int widthBound = IMAGE_WIDTH - 1;
+	int heightBound = IMAGE_HEIGHT - 1;
 
-	// ÄÚ£¨8¸öÏñËØ£©Íâ£¨16¸öÏñËØ£©²ããĞÖµ
+	// å†…ï¼ˆ8ä¸ªåƒç´ ï¼‰å¤–ï¼ˆ16ä¸ªåƒç´ ï¼‰å±‚é˜ˆå€¼
 	int innerBandThreshold = 3;
 	int outerBandThreshold = 7;
 
-	// ´¦ÀíÃ¿ĞĞÏñËØ
-	for (int depthArrayRowIndex = 0; depthArrayRowIndex<IMAGE_WIDTH;depthArrayRowIndex++)
+	// å¤„ç†æ¯è¡Œåƒç´ 
+	for (int depthArrayRowIndex = 0; depthArrayRowIndex<IMAGE_HEIGHT;depthArrayRowIndex++)
 	{
-		// ´¦ÀíÒ»ĞĞÏñËØÖĞµÄÃ¿¸öÏñËØ
-		for (int depthArrayColumnIndex = 0; depthArrayColumnIndex < IMAGE_HEIGHT; depthArrayColumnIndex++)
+		// å¤„ç†ä¸€è¡Œåƒç´ ä¸­çš„æ¯ä¸ªåƒç´ 
+		for (int depthArrayColumnIndex = 0; depthArrayColumnIndex < IMAGE_WIDTH; depthArrayColumnIndex++)
 		{
-			int depthIndex = depthArrayColumnIndex + (depthArrayRowIndex * IMAGE_HEIGHT);
+			int depthIndex = depthArrayColumnIndex + (depthArrayRowIndex * IMAGE_WIDTH);
 
-			// ÎÒÃÇÈÏÎªÉî¶ÈÖµÎª0µÄÏñËØ¼´ÎªºòÑ¡ÏñËØ
+			// æˆ‘ä»¬è®¤ä¸ºæ·±åº¦å€¼ä¸º0çš„åƒç´ å³ä¸ºå€™é€‰åƒç´ 
 			if (depthArray[depthIndex] == 0)
 			{
-				// Í¨¹ıÏñËØË÷Òı£¬ÎÒÃÇ¿ÉÒÔ¼ÆËãµÃµ½ÏñËØµÄºá×İ×ø±ê
-				int x = depthIndex % IMAGE_HEIGHT;
-				int y = (depthIndex - x) / IMAGE_HEIGHT;
+				// é€šè¿‡åƒç´ ç´¢å¼•ï¼Œæˆ‘ä»¬å¯ä»¥è®¡ç®—å¾—åˆ°åƒç´ çš„æ¨ªçºµåæ ‡
+				int x = depthIndex % IMAGE_WIDTH;
+				int y = (depthIndex - x) / IMAGE_WIDTH;
 
-				// filter collection ÓÃÀ´¼ÆËãÂË²¨Æ÷ÄÚÃ¿¸öÉî¶ÈÖµ¶ÔÓ¦µÄÆµ¶È£¬ÔÚºóÃæ
-				// ÎÒÃÇ½«Í¨¹ıÕâ¸öÊıÖµÀ´È·¶¨¸øºòÑ¡ÏñËØÒ»¸öÊ²Ã´Éî¶ÈÖµ¡£
+				// filter collection ç”¨æ¥è®¡ç®—æ»¤æ³¢å™¨å†…æ¯ä¸ªæ·±åº¦å€¼å¯¹åº”çš„é¢‘åº¦ï¼Œåœ¨åé¢
+				// æˆ‘ä»¬å°†é€šè¿‡è¿™ä¸ªæ•°å€¼æ¥ç¡®å®šç»™å€™é€‰åƒç´ ä¸€ä¸ªä»€ä¹ˆæ·±åº¦å€¼ã€‚
 				unsigned short filterCollection[24][2] = {0};
 
-				// ÄÚÍâ²ã¿òÄÚ·ÇÁãÏñËØÊıÁ¿¼ÆÊıÆ÷£¬ÔÚºóÃæÓÃÀ´È·¶¨ºòÑ¡ÏñËØÊÇ·ñÂË²¨
+				// å†…å¤–å±‚æ¡†å†…éé›¶åƒç´ æ•°é‡è®¡æ•°å™¨ï¼Œåœ¨åé¢ç”¨æ¥ç¡®å®šå€™é€‰åƒç´ æ˜¯å¦æ»¤æ³¢
 				int innerBandCount = 0;
 				int outerBandCount = 0;
 
-				// ÏÂÃæµÄÑ­»·½«»á¶ÔÒÔºòÑ¡ÏñËØÎªÖĞĞÄµÄ5 X 5µÄÏñËØÕóÁĞ½øĞĞ±éÀú¡£ÕâÀï¶¨ÒåÁËÁ½¸ö±ß½ç¡£Èç¹ûÔÚ
-				// Õâ¸öÕóÁĞÄÚµÄÏñËØÎª·ÇÁã£¬ÄÇÃ´ÎÒÃÇ½«¼ÇÂ¼Õâ¸öÉî¶ÈÖµ£¬²¢½«ÆäËùÔÚ±ß½çµÄ¼ÆÊıÆ÷¼ÓÒ»£¬Èç¹û¼ÆÊıÆ÷
-				// ¸ß¹ıÉè¶¨µÄãĞÖµ£¬ÄÇÃ´ÎÒÃÇ½«È¡ÂË²¨Æ÷ÄÚÍ³¼ÆµÄÉî¶ÈÖµµÄÖÚÊı£¨Æµ¶È×î¸ßµÄÄÇ¸öÉî¶ÈÖµ£©Ó¦ÓÃÓÚºòÑ¡
-				// ÏñËØÉÏ
+				// ä¸‹é¢çš„å¾ªç¯å°†ä¼šå¯¹ä»¥å€™é€‰åƒç´ ä¸ºä¸­å¿ƒçš„5 X 5çš„åƒç´ é˜µåˆ—è¿›è¡Œéå†ã€‚è¿™é‡Œå®šä¹‰äº†ä¸¤ä¸ªè¾¹ç•Œã€‚å¦‚æœåœ¨
+				// è¿™ä¸ªé˜µåˆ—å†…çš„åƒç´ ä¸ºéé›¶ï¼Œé‚£ä¹ˆæˆ‘ä»¬å°†è®°å½•è¿™ä¸ªæ·±åº¦å€¼ï¼Œå¹¶å°†å…¶æ‰€åœ¨è¾¹ç•Œçš„è®¡æ•°å™¨åŠ ä¸€ï¼Œå¦‚æœè®¡æ•°å™¨
+				// é«˜è¿‡è®¾å®šçš„é˜ˆå€¼ï¼Œé‚£ä¹ˆæˆ‘ä»¬å°†å–æ»¤æ³¢å™¨å†…ç»Ÿè®¡çš„æ·±åº¦å€¼çš„ä¼—æ•°ï¼ˆé¢‘åº¦æœ€é«˜çš„é‚£ä¸ªæ·±åº¦å€¼ï¼‰åº”ç”¨äºå€™é€‰
+				// åƒç´ ä¸Š
 				for (int yi = -2; yi < 3; yi++)
 				{
 					for (int xi = -2; xi < 3; xi++)
 					{
-						// yiºÍxiÎª²Ù×÷ÏñËØÏà¶ÔÓÚºòÑ¡ÏñËØµÄÆ½ÒÆÁ¿
+						// yiå’Œxiä¸ºæ“ä½œåƒç´ ç›¸å¯¹äºå€™é€‰åƒç´ çš„å¹³ç§»é‡
 
-						// ÎÒÃÇ²»Òªxi = 0&&yi = 0µÄÇé¿ö£¬ÒòÎª´ËÊ±²Ù×÷µÄ¾ÍÊÇºòÑ¡ÏñËØ
+						// æˆ‘ä»¬ä¸è¦xi = 0&&yi = 0çš„æƒ…å†µï¼Œå› ä¸ºæ­¤æ—¶æ“ä½œçš„å°±æ˜¯å€™é€‰åƒç´ 
 						if (xi != 0 || yi != 0)
 						{
-							// È·¶¨²Ù×÷ÏñËØÔÚÉî¶ÈÍ¼ÖĞµÄÎ»ÖÃ
+							// ç¡®å®šæ“ä½œåƒç´ åœ¨æ·±åº¦å›¾ä¸­çš„ä½ç½®
 							int xSearch = x + xi;
 							int ySearch = y + yi;
 
-							// ¼ì²é²Ù×÷ÏñËØµÄÎ»ÖÃÊÇ·ñ³¬¹ıÁËÍ¼ÏñµÄ±ß½ç£¨ºòÑ¡ÏñËØÔÚÍ¼ÏñµÄ±ßÔµ£©
+							// æ£€æŸ¥æ“ä½œåƒç´ çš„ä½ç½®æ˜¯å¦è¶…è¿‡äº†å›¾åƒçš„è¾¹ç•Œï¼ˆå€™é€‰åƒç´ åœ¨å›¾åƒçš„è¾¹ç¼˜ï¼‰
 							if (xSearch >= 0 && xSearch <= widthBound &&
 								ySearch >= 0 && ySearch <= heightBound)
 							{
-								int index = xSearch + (ySearch * IMAGE_HEIGHT);
-								// ÎÒÃÇÖ»Òª·ÇÁãÁ¿
+								int index = xSearch + (ySearch * IMAGE_WIDTH);
+								// æˆ‘ä»¬åªè¦éé›¶é‡
 								if (depthArray[index] != 0)
 								{
-									// ¼ÆËãÃ¿¸öÉî¶ÈÖµµÄÆµ¶È
+									// è®¡ç®—æ¯ä¸ªæ·±åº¦å€¼çš„é¢‘åº¦
 									for (int i = 0; i < 24; i++)
 									{
 										if (filterCollection[i][0] == depthArray[index])
 										{
-											// Èç¹ûÔÚ filter collectionÖĞÒÑ¾­¼ÇÂ¼¹ıÁËÕâ¸öÉî¶È
-											// ½«Õâ¸öÉî¶È¶ÔÓ¦µÄÆµ¶È¼ÓÒ»
+											// å¦‚æœåœ¨ filter collectionä¸­å·²ç»è®°å½•è¿‡äº†è¿™ä¸ªæ·±åº¦
+											// å°†è¿™ä¸ªæ·±åº¦å¯¹åº”çš„é¢‘åº¦åŠ ä¸€
 											filterCollection[i][1]++;
 											break;
 										}
 										else if (filterCollection[i][0] == 0)
 										{
-											// Èç¹ûfilter collectionÖĞÃ»ÓĞ¼ÇÂ¼Õâ¸öÉî¶È
-											// ÄÇÃ´¼ÇÂ¼
+											// å¦‚æœfilter collectionä¸­æ²¡æœ‰è®°å½•è¿™ä¸ªæ·±åº¦
+											// é‚£ä¹ˆè®°å½•
 											filterCollection[i][0] = depthArray[index];
 											filterCollection[i][1]++;
 											break;
 										}
 									}
 
-									// È·¶¨ÊÇÄÚÍâÄÄ¸ö±ß½çÄÚµÄÏñËØ²»ÎªÁã£¬¶ÔÏàÓ¦¼ÆÊıÆ÷¼ÓÒ»
+									// ç¡®å®šæ˜¯å†…å¤–å“ªä¸ªè¾¹ç•Œå†…çš„åƒç´ ä¸ä¸ºé›¶ï¼Œå¯¹ç›¸åº”è®¡æ•°å™¨åŠ ä¸€
 									if (yi != 2 && yi != -2 && xi != 2 && xi != -2)
 										innerBandCount++;
 									else
@@ -139,16 +140,16 @@ int main()
 					}
 				}
 
-				// ÅĞ¶Ï¼ÆÊıÆ÷ÊÇ·ñ³¬¹ıãĞÖµ£¬Èç¹ûÈÎÒâ²ãÄÚ·ÇÁãÏñËØµÄÊıÄ¿³¬¹ıÁËãĞÖµ£¬
-				// ¾ÍÒª½«ËùÓĞ·ÇÁãÏñËØÉî¶ÈÖµ¶ÔÓ¦µÄÍ³¼ÆÖÚÊı
+				// åˆ¤æ–­è®¡æ•°å™¨æ˜¯å¦è¶…è¿‡é˜ˆå€¼ï¼Œå¦‚æœä»»æ„å±‚å†…éé›¶åƒç´ çš„æ•°ç›®è¶…è¿‡äº†é˜ˆå€¼ï¼Œ
+				// å°±è¦å°†æ‰€æœ‰éé›¶åƒç´ æ·±åº¦å€¼å¯¹åº”çš„ç»Ÿè®¡ä¼—æ•°
 				if (innerBandCount >= innerBandThreshold || outerBandCount >= outerBandThreshold)
 				{
 					short frequency = 0;
 					short depth = 0;
-					// Õâ¸öÑ­»·½«Í³¼ÆËùÓĞ·ÇÁãÏñËØÉî¶ÈÖµ¶ÔÓ¦µÄÖÚÊı
+					// è¿™ä¸ªå¾ªç¯å°†ç»Ÿè®¡æ‰€æœ‰éé›¶åƒç´ æ·±åº¦å€¼å¯¹åº”çš„ä¼—æ•°
 					for (int i = 0; i < 24; i++)
 					{
-						// µ±Ã»ÓĞ¼ÇÂ¼Éî¶ÈÖµÊ±£¨ÎŞ·ÇÁãÉî¶ÈÖµµÄÏñËØ£©
+						// å½“æ²¡æœ‰è®°å½•æ·±åº¦å€¼æ—¶ï¼ˆæ— éé›¶æ·±åº¦å€¼çš„åƒç´ ï¼‰
 						if (filterCollection[i][0] == 0)
 							break;
 						if (filterCollection[i][1] > frequency)
@@ -167,18 +168,18 @@ int main()
 			}
 			else
 			{
-				// Èç¹ûÏñËØµÄÉî¶ÈÖµ²»ÎªÁã£¬±£³ÖÔ­Éî¶ÈÖµ
+				// å¦‚æœåƒç´ çš„æ·±åº¦å€¼ä¸ä¸ºé›¶ï¼Œä¿æŒåŸæ·±åº¦å€¼
 				smoothDepthArray[depthIndex] = depthArray[depthIndex];
 			}
 		}
 	}
 
-	for (int i = 0; i < IMAGE_HEIGHT * IMAGE_WIDTH; i++)
+	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 	{
-		int row = i / IMAGE_HEIGHT;
-		int col = i % IMAGE_HEIGHT;
+		int row = i / IMAGE_WIDTH;
+		int col = i % IMAGE_WIDTH;
 
-		unsigned short depthValue = smoothDepthArray[row * IMAGE_HEIGHT + col];
+		unsigned short depthValue = smoothDepthArray[row * IMAGE_WIDTH + col];
 		if (depthValue == 0)
 		{
 			i_after.data[i * 4] = 255;
@@ -196,13 +197,13 @@ int main()
 		}
 	}
 
-	// 3. ÏÔÊ¾
+	// 3. æ˜¾ç¤º
 	thread th = std::thread([&]{
 		while (true)
 		{
-			imshow("Ô­Ê¼Éî¶ÈÍ¼", i_depth);
+			imshow("åŸå§‹æ·±åº¦å›¾", i_depth);
 			waitKey(1);
-			imshow("±ãÓÚ¹Û²ìµÄÔ­Ê¼Éî¶ÈÍ¼", i_before);
+			imshow("ä¾¿äºè§‚å¯Ÿçš„åŸå§‹æ·±åº¦å›¾", i_before);
 			waitKey(1);
 		}
 	});
@@ -210,9 +211,9 @@ int main()
 	thread th2 = std::thread([&]{
 		while (true)
 		{
-			imshow("½á¹ûÍ¼", i_result);
+			imshow("ç»“æœå›¾", i_result);
 			waitKey(1);
-			imshow("±ãÓÚ¹Û²ìµÄÂË²¨Éî¶ÈÍ¼", i_after);
+			imshow("ä¾¿äºè§‚å¯Ÿçš„æ»¤æ³¢æ·±åº¦å›¾", i_after);
 			waitKey(1);
 		}
 	});
