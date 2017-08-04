@@ -1,4 +1,4 @@
-﻿# CMake 最低版本号要求
+# CMake 最低版本号要求
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # 项目信息
@@ -32,8 +32,8 @@ INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 ELSEIF(UNIX)
 # Linux平台执行
 
-FIND_PACKAGE(OpenCV 2 REQUIRED)
-# INCLUDE(/usr/local/share/OpenCV/OpenCVConfig.cmake)
+#FIND_PACKAGE(OpenCV 2 REQUIRED)
+INCLUDE(/usr/local/share/OpenCV/OpenCVConfig.cmake)
 
 message( STATUS "OpenCV library status:" )              # 输出一下得到的变量
 message( STATUS "version: ${OpenCV_VERSION}" )
